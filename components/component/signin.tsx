@@ -1,10 +1,31 @@
-
+'use client'
 import Link from "next/link"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { signIn } from 'next-auth/react'
+import { useState } from 'react'
 
 export function SignIn() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const result = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    })
+
+    if (result?.error) {
+      setError(result.error)
+    } else {
+      window.location.href = '/home'
+    }
+  }
+
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
       <header className="flex h-20 items-center justify-between px-6 border-b">
@@ -13,9 +34,8 @@ export function SignIn() {
           <span className="text-2xl font-bold text-foreground">Arc</span>
         </Link>
         <nav className="flex items-center gap-4">
-
           <Link
-            href="/signup"
+            href="signup"
             className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
             prefetch={false}
           >
@@ -31,18 +51,32 @@ export function SignIn() {
             <p className="text-muted-foreground">Secure and effortless file storage and sharing.</p>
           </div>
           <div className="grid gap-6">
-
             <div className="space-y-2">
               <h2 className="text-xl font-bold">Sign In</h2>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" required />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="Enter your password" required />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                 </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <Button type="submit" className="w-full">
                   Sign In
                 </Button>
@@ -53,9 +87,7 @@ export function SignIn() {
       </main>
       <footer className="flex flex-col sm:flex-row items-center justify-between py-6 w-full px-4 md:px-6 border-t">
         <p className="text-xs text-[#666] flex-1 text-left">&copy; 2024 Drive App. All rights reserved.</p>
-
         <p className="text-xs text-[#666] mx-auto">Developed By Harsh</p>
-
         <nav className="flex-1 flex justify-end gap-4 sm:gap-6">
           <Link href="#" className="text-xs hover:underline underline-offset-4" prefetch={false}>
             Github
@@ -86,12 +118,11 @@ function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       className="lucide lucide-hard-drive-download"
     >
-      
       <path d="M12 2v8" />
       <path d="M16 6L12 10 8 6" />
       <rect width="20" height="8" x="2" y="14" rx="2"/>
       <path d="M6 18h.01" />
       <path d="M10 18h.01" />
     </svg>
-  );
+  )
 }

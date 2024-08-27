@@ -33,9 +33,30 @@ export async function getFile(fileId: string, env: any) {
     });
   } catch (error) {
     console.error('Error fetching file:', error);
-    return new Response(`Error fetching file: ${error.message}`, { status: 500 });
+    return new Response(`Error fetching file: ${error}`, { status: 500 });
   }
 }
+
+export async function createUser(request: Request, env: any) {
+  try {
+    const { email, name, password } = await request.json();
+    console.log('Received data:', { email, name, password });
+
+    const id = crypto.randomUUID();
+    console.log('Generated ID:', id);
+
+    const result = await env.DB.prepare('INSERT INTO User (id, email, name, password) VALUES (?, ?, ?, ?)')
+      .bind(id, email, name, password)
+      .run();
+    console.log('Insert result:', result);
+
+    return new Response(JSON.stringify({ id, email, name }), { status: 201 });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return new Response('Failed to create user', { status: 500 });
+  }
+}
+
 
 export async function getUserFiles(request: Request, env: any) {
   try {
@@ -63,7 +84,7 @@ export async function getUserFiles(request: Request, env: any) {
     });
   } catch (error) {
     console.error('Error fetching files:', error);
-    return new Response(`Error fetching files: ${error.message}`, { status: 500 });
+    return new Response(`Error fetching files: ${error}`, { status: 500 });
   }
 }
 

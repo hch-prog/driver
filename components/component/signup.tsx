@@ -1,10 +1,54 @@
+'use client'
+import Link from "next/link";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import Link from "next/link"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 
-export function SignUp() { 
+export function SignUp() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+      if (!baseUrl) {
+        alert("Base URL is not defined");
+        return;
+      }
+  
+      const response = await fetch(`${baseUrl}/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to create user: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      console.log('User created:', data);
+  
+      router.push('/');
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to create user. Please try again.');
+    }
+  };
+  
+
+
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
       <header className="flex h-20 items-center justify-between px-6 border-b">
@@ -14,7 +58,7 @@ export function SignUp() {
         </Link>
         <nav className="flex items-center gap-4">
           <Link
-            href="/signin"
+            href="signin"
             className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
             prefetch={false}
           >
@@ -32,19 +76,40 @@ export function SignUp() {
           <div className="grid gap-6">
             <div className="space-y-2">
               <h2 className="text-xl font-bold">Sign Up</h2>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="Enter your name" required />
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" required />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="Enter your password" required />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                  />
                 </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <Button type="submit" className="w-full">
                   Sign Up
                 </Button>
@@ -71,7 +136,7 @@ export function SignUp() {
         </nav>
       </footer>
     </div>
-  )
+  );
 }
 
 function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -88,10 +153,9 @@ function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       className="lucide lucide-hard-drive-download"
     >
-      
       <path d="M12 2v8" />
       <path d="M16 6L12 10 8 6" />
-      <rect width="20" height="8" x="2" y="14" rx="2"/>
+      <rect width="20" height="8" x="2" y="14" rx="2" />
       <path d="M6 18h.01" />
       <path d="M10 18h.01" />
     </svg>

@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { signOut } from 'next-auth/react'; // Import signOut from next-auth
+import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 
 export function Drive() {
   const [userId, setUserId] = useState('');
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const router = useRouter(); // Initialize useRouter
 
   const handleFetchFiles = async () => {
     if (!userId) {
@@ -60,6 +63,17 @@ export function Drive() {
     window.open(url, '_blank'); 
   };
 
+  const handleSignOut = async () => {
+    console.log("Signing out..."); // Log before signing out
+    try {
+      await signOut({ redirect: false }); // Prevent default redirection
+      console.log("Signed out successfully. Redirecting to home..."); // Log after sign-out
+      router.push('/'); // Navigate to the home page after sign-out
+    } catch (error) {
+      console.error("Error during sign-out:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="flex h-16 items-center justify-between px-6 border-b">
@@ -102,7 +116,7 @@ export function Drive() {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Help</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Sign out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -178,6 +192,9 @@ export function Drive() {
     </div>
   );
 }
+
+
+
 
 function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -389,3 +406,4 @@ function UploadIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
