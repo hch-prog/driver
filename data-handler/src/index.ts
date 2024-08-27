@@ -1,25 +1,53 @@
 import { testD1AndR2 } from "./handlers/testHandlers";
 import { handleUpload } from "./handlers/uploadHandler";
-import { addUser, getUser, getUsers } from "./handlers/userhandlers";
+import { addUser, getUser, getUsers } from "./handlers/userHandlers";
+import { getFile, getUserFiles } from "./handlers/fileHandler";
 
 export default {
   async fetch(request: Request, env: any) {
     const url = new URL(request.url);
+    let response: Response;
+
     switch (url.pathname) {
       case '/':
-        return new Response('Worker is up and running!', { status: 200 });
+        response = new Response('Worker is up and running!', { status: 200 });
+        break;
       case '/get-users':
-        return getUsers(env);
+        response = await getUsers(env);
+        break;
       case '/add-user':
-        return addUser(request, env);
+        response = await addUser(request, env);
+        break;
       case '/get-user':
-        return getUser(request, env);
+        response = await getUser(request, env);
+        break;
       case '/upload':
-        return handleUpload(request, env);
+        response = await handleUpload(request, env);
+        break;
+      case `/get-file/${url.pathname.split("/").pop()}`:
+        response = await getFile(url.pathname.split("/").pop(), env);
+        break;
       case '/test-d1-r2':
-        return testD1AndR2(env);
+        response = await testD1AndR2(env);
+        break;
+      case '/api/get-user-files':
+        response = await getUserFiles(request, env);
+        break;
       default:
-        return new Response('Not found', { status: 404 });
+        response = new Response('Not found', { status: 404 });
     }
+
+    // Adding CORS headers
+    response = new Response(response.body, {
+      ...response,
+      headers: {
+        ...response.headers,
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    });
+
+    return response;
   }
 };

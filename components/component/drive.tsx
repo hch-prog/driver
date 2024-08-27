@@ -1,25 +1,91 @@
+'use client'
+import React, { useState } from 'react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+export function Drive() {
+  const [userId, setUserId] = useState('');
+  const [files, setFiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-export function Component() {
+  const handleFetchFiles = async () => {
+    if (!userId) {
+      alert('Please enter a user ID.');
+      console.log('No user ID provided.');
+      return;
+    }
+
+    console.log(`Fetching files for user ID: ${userId}`);
+    setLoading(true);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+      if (!baseUrl) {
+        alert("Base URL is not defined");
+        return;
+      }
+      const response = await fetch(`${baseUrl}/api/get-user-files?userId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Files fetched successfully:', data.files);
+        setFiles(data.files); 
+      } else {
+        console.error('Failed to fetch files. Status:', response.status);
+        alert('Failed to fetch files. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      alert('An error occurred while fetching files.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleFetchFiles();
+    }
+  };
+
+  const handleFileClick = (fileId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+    if (!baseUrl) {
+      alert("Base URL for the backend is not defined");
+      return;
+    }
+    const url = `${baseUrl}/get-file/${fileId}`;
+    window.open(url, '_blank'); 
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
-      
-
       <header className="flex h-16 items-center justify-between px-6 border-b">
         <Link href="#" className="flex items-center gap-2" prefetch={false}>
           <HardDriveDownloadIcon className="h-6 w-6" />
-          <span className="text-lg font-semibold"> Arc</span>
+          <span className="text-lg font-semibold">Arc</span>
         </Link>
-        
+
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <label>
+            Enter userId:
+            <input
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter userId"
+              style={{ marginLeft: '10px', padding: '5px', width: '300px' }}
+            />
+          </label>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={handleFetchFiles}>
             <SearchIcon className="h-5 w-5" />
             <span className="sr-only">Search</span>
+          </Button>
+          <Button onClick={handleFetchFiles} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+            Enter
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -83,103 +149,34 @@ export function Component() {
                 </Button>
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <Card className="group">
-                <CardContent className="flex flex-col gap-2">
-                  <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                    <FolderIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="font-medium truncate">Documents</div>
-                  <div className="text-xs text-muted-foreground truncate">12 items</div>
-                </CardContent>
-                <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon">
-                    <MoveHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              <Card className="group">
-                <CardContent className="flex flex-col gap-2">
-                  <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                    <FolderIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="font-medium truncate">Photos</div>
-                  <div className="text-xs text-muted-foreground truncate">45 items</div>
-                </CardContent>
-                <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon">
-                    <MoveHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              <Card className="group">
-                <CardContent className="flex flex-col gap-2">
-                  <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                    <FileIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="font-medium truncate">Resume.pdf</div>
-                  <div className="text-xs text-muted-foreground truncate">1.2 MB</div>
-                </CardContent>
-                <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon">
-                    <MoveHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              <Card className="group">
-                <CardContent className="flex flex-col gap-2">
-                  <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                    <FileIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="font-medium truncate">Presentation.pptx</div>
-                  <div className="text-xs text-muted-foreground truncate">5.4 MB</div>
-                </CardContent>
-                <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon">
-                    <MoveHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              <Card className="group">
-                <CardContent className="flex flex-col gap-2">
-                  <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                    <FolderIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="font-medium truncate">Work</div>
-                  <div className="text-xs text-muted-foreground truncate">23 items</div>
-                </CardContent>
-                <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon">
-                    <MoveHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              <Card className="group">
-                <CardContent className="flex flex-col gap-2">
-                  <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                    <FileIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="font-medium truncate">Report.docx</div>
-                  <div className="text-xs text-muted-foreground truncate">3.8 MB</div>
-                </CardContent>
-                <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon">
-                    <MoveHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
+            {loading ? (
+              <div>Loading...</div>
+            ) : (
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {files.map((file) => (
+                  <Card key={file.id} className="group" onClick={() => handleFileClick(file.id)}>
+                    <CardContent className="flex flex-col gap-2">
+                      <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
+                        <FileIcon className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <div className="font-medium truncate">{file.fileName}</div>
+                      <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
+                    </CardContent>
+                    <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon">
+                        <MoveHorizontalIcon className="h-4 w-4" />
+                        <span className="sr-only">More options</span>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }
 
 function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -196,10 +193,9 @@ function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       className="lucide lucide-hard-drive-download"
     >
-      
       <path d="M12 2v8" />
       <path d="M16 6L12 10 8 6" />
-      <rect width="20" height="8" x="2" y="14" rx="2"/>
+      <rect width="20" height="8" x="2" y="14" rx="2" />
       <path d="M6 18h.01" />
       <path d="M10 18h.01" />
     </svg>
@@ -241,28 +237,6 @@ function FolderIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
     >
       <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-    </svg>
-  )
-}
-
-function HardDriveIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="22" x2="2" y1="12" y2="12" />
-      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-      <line x1="6" x2="6.01" y1="16" y2="16" />
-      <line x1="10" x2="10.01" y1="16" y2="16" />
     </svg>
   )
 }

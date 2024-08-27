@@ -7,30 +7,33 @@ export async function handleUpload(request: Request, env: any) {
     const password = formData.get('password')?.toString();
 
     if (!file || !name || !email || !password) {
+      console.error('Missing file or required fields');
       return new Response('Missing file or required fields', { status: 400 });
     }
 
     const fileKey = `${crypto.randomUUID()}-${(file as File).name}`;
+    console.log('Generated file key:', fileKey);
+
 
     await env.R2.put(fileKey, file, {
       httpMetadata: { contentType: file.type },
     });
+    console.log('File uploaded to R2:', fileKey);
 
-    // Fallback to a hardcoded bucket name if env.R2.bucket_name is undefined
-    console.log(env.R2.bucket_name);
-    const bucketName = env.R2.bucket_name || 'bucket4';
-    console.log('R2 Bucket Name:', bucketName);  // Debugging line
+   
+    const fileUrl = `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${fileKey}`;
+    console.log('Generated file URL:', fileUrl);
 
-    const fileUrl = `https://${bucketName}.r2.cloudflarestorage.com/${fileKey}`;
-    
     const userId = crypto.randomUUID();
     await env.DB.prepare("INSERT INTO User (id, name, email, password) VALUES (?, ?, ?, ?)")
       .bind(userId, name, email, password)
       .run();
+    console.log('User data inserted into DB:', userId);
 
     await env.DB.prepare("INSERT INTO File (id, fileName, url, contentType, size, userId) VALUES (?, ?, ?, ?, ?, ?)")
       .bind(crypto.randomUUID(), (file as File).name, fileUrl, file.type, file.size, userId)
       .run();
+    console.log('File metadata inserted into DB:', fileKey);
 
     return new Response(`File uploaded and user data added successfully with file URL: ${fileUrl}`, { status: 201 });
 
