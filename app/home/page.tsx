@@ -1,4 +1,4 @@
-import { Drive } from "@/components/component/drive";
+import { Drive } from "@/components/drive";
 
 
 export default function Home() {

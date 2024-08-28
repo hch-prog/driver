@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs';
+
 export async function getFile(fileId: string, env: any) {
   try {
    
@@ -37,18 +39,34 @@ export async function getFile(fileId: string, env: any) {
   }
 }
 
+export async function findUser(request: Request, env: any) {
+  try {
+    const { email } = await request.json();
+    const result = await env.DB.prepare('SELECT * FROM User WHERE email = ?').bind(email).first();
+
+    if (!result) {
+      return new Response('User not found', { status: 404 });
+    }
+
+    return new Response(JSON.stringify(result), { status: 200 });
+  } catch (error) {
+    console.error('Error finding user:', error);
+    return new Response('Error finding user', { status: 500 });
+  }
+}
+
+
+
 export async function createUser(request: Request, env: any) {
   try {
     const { email, name, password } = await request.json();
-    console.log('Received data:', { email, name, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const id = crypto.randomUUID();
-    console.log('Generated ID:', id);
 
-    const result = await env.DB.prepare('INSERT INTO User (id, email, name, password) VALUES (?, ?, ?, ?)')
-      .bind(id, email, name, password)
+    await env.DB.prepare('INSERT INTO User (id, email, name, password) VALUES (?, ?, ?, ?)')
+      .bind(id, email, name, hashedPassword)
       .run();
-    console.log('Insert result:', result);
 
     return new Response(JSON.stringify({ id, email, name }), { status: 201 });
   } catch (error) {
@@ -56,6 +74,7 @@ export async function createUser(request: Request, env: any) {
     return new Response('Failed to create user', { status: 500 });
   }
 }
+
 
 
 export async function getUserFiles(request: Request, env: any) {

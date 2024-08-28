@@ -1,4 +1,4 @@
-// app/api/auth/[...nextauth]/route.ts
+
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { NextAuthOptions } from 'next-auth';
@@ -46,5 +46,5 @@ const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
 
 
-// E:\build\drive\app\signin\page.tsx
+
 

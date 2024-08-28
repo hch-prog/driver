@@ -1,6 +1,6 @@
 import { testD1AndR2 } from "./handlers/testHandlers";
 import { handleUpload } from "./handlers/uploadHandler";
-import { getFile, getUserFiles,createUser } from "./handlers/fileHandler";
+import { getFile, getUserFiles,createUser, findUser } from "./handlers/fileHandler";
 
 export default {
   async fetch(request: Request, env: any) {
@@ -35,6 +35,8 @@ export default {
           case '/create-user':
             response = await createUser(request, env);
             break;
+          case '/find-User':
+            response=await findUser(request,env);
           default:
             response = new Response('Not found', { status: 404 });
         }
