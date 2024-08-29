@@ -8,12 +8,15 @@ import { Card, CardContent, CardFooter } from "@/ui/card";
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
+import { Upload } from './upload';
 
 export function Drive() {
   const [userId, setUserId] = useState('');
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter(); // Initialize useRouter
+  const [showUpload,setShowUpload]=useState(false);
+ 
 
   const handleFetchFiles = async () => {
     if (!userId) {
@@ -35,7 +38,7 @@ export function Drive() {
       if (response.ok) {
         const data = await response.json();
         console.log('Files fetched successfully:', data.files);
-        setFiles(data.files); 
+        setFiles(data.files);
       } else {
         console.error('Failed to fetch files. Status:', response.status);
         alert('Failed to fetch files. Please try again.');
@@ -61,7 +64,7 @@ export function Drive() {
       return;
     }
     const url = `${baseUrl}/get-file/${fileId}`;
-    window.open(url, '_blank'); 
+    window.open(url, '_blank');
   };
 
   const handleSignOut = async () => {
@@ -74,6 +77,11 @@ export function Drive() {
       console.error("Error during sign-out:", error);
     }
   };
+
+  const handleUpload = () => {
+    console.log("upload button is being clicked");
+    
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -128,7 +136,7 @@ export function Drive() {
             <PlusIcon className="h-5 w-5" />
             New
           </Button>
-          <Button variant="ghost" className="justify-start gap-2 px-2">
+          <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleUpload}>
             <UploadIcon className="h-5 w-5" />
             Upload
           </Button>
