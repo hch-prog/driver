@@ -9,14 +9,15 @@ import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
 import { Upload } from './upload';
+import { Folder } from './Folder';
 
 export function Drive() {
   const [userId, setUserId] = useState('');
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); // Initialize useRouter
-  const [showUpload,setShowUpload]=useState(false);
- 
+  const router = useRouter();
+  const [showUpload, setShowUpload] = useState(false);
+  const [showFolder, setShowFolder] = useState(false);
 
   const handleFetchFiles = async () => {
     if (!userId) {
@@ -68,23 +69,28 @@ export function Drive() {
   };
 
   const handleSignOut = async () => {
-    console.log("Signing out..."); // Log before signing out
+    console.log("Signing out...");
     try {
-      await signOut({ redirect: false }); // Prevent default redirection
-      console.log("Signed out successfully. Redirecting to home..."); // Log after sign-out
-      router.push('/'); // Navigate to the home page after sign-out
+      await signOut({ redirect: false });
+      console.log("Signed out successfully. Redirecting to home...");
+      router.push('/');
     } catch (error) {
       console.error("Error during sign-out:", error);
     }
   };
 
   const handleUpload = () => {
-    console.log("upload button is being clicked");
-    
-  }
+    setShowUpload(!showUpload);
+    setShowFolder(false); 
+  };
+
+  const handleFolder = () => {
+    setShowFolder(!showFolder);
+    setShowUpload(false); 
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="relative flex flex-col min-h-screen">
       <header className="flex h-16 items-center justify-between px-6 border-b">
         <Link href="#" className="flex items-center gap-2" prefetch={false}>
           <HardDriveDownloadIcon className="h-6 w-6" />
@@ -122,7 +128,7 @@ export function Drive() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Arc Drive</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem><Link href="/settings">Settings</Link></DropdownMenuItem>
               <DropdownMenuItem>Help</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
@@ -140,7 +146,7 @@ export function Drive() {
             <UploadIcon className="h-5 w-5" />
             Upload
           </Button>
-          <Button variant="ghost" className="justify-start gap-2 px-2">
+          <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleFolder}>
             <FolderIcon className="h-5 w-5" />
             Folders
           </Button>
@@ -153,54 +159,65 @@ export function Drive() {
             Trash
           </Button>
         </aside>
-        <main className="flex-1 p-4 sm:p-6">
-          <div className="grid gap-4">
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-semibold">My Drive</div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <LayoutGridIcon className="h-5 w-5" />
-                  <span className="sr-only">Grid view</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <ListIcon className="h-5 w-5" />
-                  <span className="sr-only">List view</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <MoveHorizontalIcon className="h-5 w-5" />
-                  <span className="sr-only">More options</span>
-                </Button>
+        <main className={`flex-1 p-4 sm:p-6 relative`}>
+          {(showUpload || showFolder) && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-10">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+                {showUpload && <Upload />}
+                {showFolder && <Folder />}
               </div>
             </div>
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {files.map((file) => (
-                  <Card key={file.id} className="group" onClick={() => handleFileClick(file.id)}>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                        <FileIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="font-medium truncate">{file.fileName}</div>
-                      <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon">
-                        <MoveHorizontalIcon className="h-4 w-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+          )}
+          {!showUpload && !showFolder && (
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between">
+                <div className="text-lg font-semibold">My Drive</div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon">
+                    <LayoutGridIcon className="h-5 w-5" />
+                    <span className="sr-only">Grid view</span>
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <ListIcon className="h-5 w-5" />
+                    <span className="sr-only">List view</span>
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <MoveHorizontalIcon className="h-5 w-5" />
+                    <span className="sr-only">More options</span>
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {files.map((file) => (
+                    <Card key={file.id} className="group" onClick={() => handleFileClick(file.id)}>
+                      <CardContent className="flex flex-col gap-2">
+                        <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
+                          <FileIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="font-medium truncate">{file.fileName}</div>
+                        <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
+                      </CardContent>
+                      <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon">
+                          <MoveHorizontalIcon className="h-4 w-4" />
+                          <span className="sr-only">More options</span>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>
   );
 }
+
 
 
 

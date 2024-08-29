@@ -1,52 +1,52 @@
 import { Button } from "@/ui/button";
 import { Label } from "@radix-ui/react-label";
-import { SettingsIcon } from "lucide-react";
+import { CloudUploadIcon, UploadIcon } from "lucide-react";
 import { Input } from "@/ui/input";
-import { Select } from "@/ui/select"
-import { Textarea } from "@/ui/textarea"
-import { Progress } from "@/ui/progress"
+import { Textarea } from "@/ui/textarea";
+
 
 export function Upload() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-background border rounded-lg p-6 shadow-sm">
+        <div>
+            <div className="w-full max-w-4xl mx-auto py-8 px-4 md:px-6 lg:px-8">
+
                 <div className="bg-background border rounded-lg p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium">Settings</h3>
+                        <h3 className="text-lg font-medium">Upload</h3>
                         <Button variant="ghost" size="icon">
-                            <SettingsIcon className="w-5 h-5" />
-                            <span className="sr-only">Settings</span>
+                            <UploadIcon className="w-5 h-5" />
+                            <span className="sr-only">Upload</span>
                         </Button>
                     </div>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="file-name">File Name</Label>
-                            <Input id="file-name" defaultValue="example.pdf" />
-                        </div>
-                        <div>
-                            <Label htmlFor="file-description">Description</Label>
-                            <Textarea id="file-description" rows={3} defaultValue="This is an example file." />
-                        </div>
-                        <div>
-                            <Label htmlFor="file-permissions">Permissions</Label>
-                            <Select id="file-permissions" defaultValue="public">
-                                <option value="public">Public</option>
-                                <option value="private">Private</option>
-                                <option value="shared">Shared</option>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="storage-usage">Storage Usage</Label>
-                            <div className="flex items-center gap-2">
-                                <div className="flex-1">
-                                    <Progress value={75} max={100} />
-                                </div>
-                                <span className="text-sm text-muted-foreground">75%</span>
-                            </div>
+                    <Label htmlFor="folder-name">Folder Name</Label>
+                    <Input id="folder-name" defaultValue="Deafult Main Branch" />
+                    <div>
+                        <Label htmlFor="file-name">File Name</Label>
+                        <Input id="file-name" defaultValue="example.pdf" />
+                    </div>
+                    <div>
+                        <Label htmlFor="file-description">Description</Label>
+                        <Textarea id="file-description" rows={3} defaultValue="Description of the file if any. " />
+                    </div>
+                    <div className="border-2 border-dashed border-muted rounded-lg p-6 flex flex-col items-center justify-center space-y-4">
+                        <CloudUploadIcon className="w-12 h-12 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                            Drag and drop files here or{" "}
+                            <Button variant="link" className="inline">
+                                select from device
+                            </Button>
+                        </p>
+                    </div>
+                    <div>
+                        <div className="flex justify-between">
+                            <Button>Upload</Button>
+                            <Button>Back</Button>
                         </div>
                     </div>
+
                 </div>
-            </div>
-        </div>
+
+
+            </div></div>
     )
 }
