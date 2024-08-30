@@ -32,7 +32,7 @@ export default {
           case '/api/get-user-files':
             response = await getUserFiles(request, env);
             break;
-          case '/get-file/': // This case is unnecessary because you already handled it above
+          case '/get-file/': 
             response = await getFile(request, env);
             break;
           case '/get-userid':
