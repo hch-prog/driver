@@ -1,33 +1,31 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from "next/link";
-
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/ui/avatar";
 import { Card, CardContent, CardFooter } from "@/ui/card";
-import { signOut } from 'next-auth/react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
 import { Upload } from './upload';
 import { Folder } from './Folder';
 
 export function Drive() {
-  const [userId, setUserId] = useState('');
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [showUpload, setShowUpload] = useState(false);
   const [showFolder, setShowFolder] = useState(false);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      handleFetchFiles(); // Automatically fetch files when session is available
+    }
+  }, [session]);
 
   const handleFetchFiles = async () => {
-    if (!userId) {
-      alert('Please enter a user ID.');
-      console.log('No user ID provided.');
-      return;
-    }
-
-    console.log(`Fetching files for user ID: ${userId}`);
-    setLoading(true);
+    setLoading(true); // Set loading state
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
@@ -35,13 +33,37 @@ export function Drive() {
         alert("Base URL is not defined");
         return;
       }
-      const response = await fetch(`${baseUrl}/api/get-user-files?userId=${userId}`);
-      if (response.ok) {
-        const data = await response.json();
+
+      const email = session?.user?.email; // Get email from session
+      if (!email) {
+        alert("User email not found in session");
+        return;
+      }
+
+      // Fetch user ID based on email
+      const userIdResponse = await fetch(`${baseUrl}/get-user-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!userIdResponse.ok) {
+        throw new Error('Failed to fetch user ID');
+      }
+
+      const { userId } = await userIdResponse.json();
+      console.log('User ID fetched successfully:', userId);
+
+      // Fetch files using the obtained userId
+      const filesResponse = await fetch(`${baseUrl}/api/get-user-files?userId=${userId}`);
+      if (filesResponse.ok) {
+        const data = await filesResponse.json();
         console.log('Files fetched successfully:', data.files);
         setFiles(data.files);
       } else {
-        console.error('Failed to fetch files. Status:', response.status);
+        console.error('Failed to fetch files. Status:', filesResponse.status);
         alert('Failed to fetch files. Please try again.');
       }
     } catch (error) {
@@ -52,21 +74,17 @@ export function Drive() {
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      handleFetchFiles();
-    }
-  };
-
   const handleFileClick = (fileId: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
     if (!baseUrl) {
       alert("Base URL for the backend is not defined");
       return;
     }
+    console.log(fileId);
     const url = `${baseUrl}/get-file/${fileId}`;
     window.open(url, '_blank');
   };
+  
 
   const handleSignOut = async () => {
     console.log("Signing out...");
@@ -81,12 +99,12 @@ export function Drive() {
 
   const handleUpload = () => {
     setShowUpload(!showUpload);
-    setShowFolder(false); 
+    setShowFolder(false);
   };
 
   const handleFolder = () => {
     setShowFolder(!showFolder);
-    setShowUpload(false); 
+    setShowUpload(false);
   };
 
   return (
@@ -98,30 +116,13 @@ export function Drive() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <label>
-            Enter userId:
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter userId"
-              style={{ marginLeft: '10px', padding: '5px', width: '300px' }}
-            />
-          </label>
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={handleFetchFiles}>
-            <SearchIcon className="h-5 w-5" />
-            <span className="sr-only">Search</span>
-          </Button>
-          <Button onClick={handleFetchFiles} style={{ marginLeft: '10px', padding: '5px 10px' }}>
-            Enter
-          </Button>
+          <span>{session?.user?.name}</span> {/* Display the user's name */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="w-8 h-8 border">
                   <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
-                  <AvatarFallback>AC</AvatarFallback>
+                  <AvatarFallback>{session?.user?.name ? session.user.name.charAt(0) : 'AC'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -218,24 +219,9 @@ export function Drive() {
   );
 }
 
-
-
-
-
 function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="lucide lucide-hard-drive-download"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hard-drive-download">
       <path d="M12 2v8" />
       <path d="M16 6L12 10 8 6" />
       <rect width="20" height="8" x="2" y="14" rx="2" />
@@ -247,79 +233,35 @@ function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function FileIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
       <path d="M14 2v4a2 2 0 0 0 2 2h4" />
     </svg>
-  )
+  );
 }
 
 function FolderIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
     </svg>
-  )
+  );
 }
 
 function LayoutGridIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect width="7" height="7" x="3" y="3" rx="1" />
       <rect width="7" height="7" x="14" y="3" rx="1" />
       <rect width="7" height="7" x="14" y="14" rx="1" />
       <rect width="7" height="7" x="3" y="14" rx="1" />
     </svg>
-  )
+  );
 }
 
 function ListIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="8" x2="21" y1="6" y2="6" />
       <line x1="8" x2="21" y1="12" y2="12" />
       <line x1="8" x2="21" y1="18" y2="18" />
@@ -327,109 +269,53 @@ function ListIcon(props: React.SVGProps<SVGSVGElement>) {
       <line x1="3" x2="3.01" y1="12" y2="12" />
       <line x1="3" x2="3.01" y1="18" y2="18" />
     </svg>
-  )
+  );
 }
 
 function MoveHorizontalIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="18 8 22 12 18 16" />
       <polyline points="6 8 2 12 6 16" />
       <line x1="2" x2="22" y1="12" y2="12" />
     </svg>
-  )
+  );
 }
 
 function PlusIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12h14" />
       <path d="M12 5v14" />
     </svg>
-  )
+  );
 }
 
 function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
     </svg>
-  )
+  );
 }
 
 function TrashIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 6h18" />
       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
     </svg>
-  )
+  );
 }
 
 function UploadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" x2="12" y1="3" y2="15" />
     </svg>
-  )
+  );
 }
-

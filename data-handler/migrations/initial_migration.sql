@@ -43,5 +43,7 @@ CREATE TABLE IF NOT EXISTS File (
   size INTEGER,
   userId TEXT,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES User(id)
+  FOREIGN KEY (userId) REFERENCES User(id),
+  folder TEXT;
+  description TEXT
 );

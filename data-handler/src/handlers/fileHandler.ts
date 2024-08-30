@@ -1,43 +1,5 @@
 import bcrypt from 'bcryptjs';
 
-export async function getFile(fileId: string, env: any) {
-  try {
-   
-    const fileMetadata = await env.DB.prepare("SELECT * FROM File WHERE id = ?").bind(fileId).first();
-
-    if (!fileMetadata) {
-      console.error('File metadata not found in DB');
-      return new Response('File not found', { status: 404 });
-    }
-
-    
-    const fileKey = fileMetadata.url.split('/').pop();
-    if (!fileKey) {
-      console.error('Invalid file URL in DB');
-      return new Response('Invalid file URL in DB', { status: 400 });
-    }
-
-    
-    const fileObject = await env.R2.get(fileKey);
-
-    if (!fileObject) {
-      console.error('File not found in R2');
-      return new Response('File not found in R2', { status: 404 });
-    }
-
-    
-    return new Response(fileObject.body, {
-      status: 200,
-      headers: {
-        'Content-Type': fileMetadata.contentType,
-        'Content-Disposition': `inline; filename="${fileMetadata.fileName}"`,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching file:', error);
-    return new Response(`Error fetching file: ${error}`, { status: 500 });
-  }
-}
 
 export async function findUser(request: Request, env: any) {
   try {
@@ -96,7 +58,7 @@ export async function getUserFiles(request: Request, env: any) {
     }
 
     console.log(`Found ${result.results.length} files for userId: ${userId}`);
-    
+
     return new Response(JSON.stringify({ files: result.results }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -107,3 +69,76 @@ export async function getUserFiles(request: Request, env: any) {
   }
 }
 
+export async function getFile(request: Request, env: any) {
+  try {
+    const url = new URL(request.url);
+    const fileId = url.pathname.split('/').pop(); // Extract the fileId from the URL
+
+    if (!fileId) {
+      return new Response('File ID is required', { status: 400 });
+    }
+
+    // Fetch file metadata from the database
+    const fileMetadata = await env.DB.prepare('SELECT * FROM File WHERE id = ?').bind(fileId).first();
+
+    if (!fileMetadata) {
+      return new Response('File not found', { status: 404 });
+    }
+
+    // Construct the file URL from the metadata
+    const fileUrl = fileMetadata.url;
+
+    console.log('Fetching file from URL:', fileUrl);
+
+    // Fetch the actual file from the storage (R2 or other storage)
+    const fileResponse = await fetch(fileUrl);
+
+    if (!fileResponse.ok) {
+      console.error('Error fetching file from storage:', fileResponse.status, fileResponse.statusText);
+      return new Response('Error fetching file from storage', { status: 500 });
+    }
+
+    // Return the file content
+    return new Response(fileResponse.body, {
+      status: 200,
+      headers: {
+        'Content-Type': fileMetadata.contentType,
+        'Content-Disposition': `inline; filename="${fileMetadata.fileName}"`,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching file:', error);
+    return new Response('Failed to fetch file', { status: 500 });
+  }
+}
+
+
+
+
+
+
+
+export async function getUserId(request: Request, env: any) {
+  try {
+    const { email } = await request.json();
+    if (!email) {
+      return new Response('Email is required', { status: 400 });
+    }
+    const user = await env.DB.prepare('SELECT id FROM User WHERE email = ?').bind(email).first();
+    if (!user) {
+      return new Response('User not found', { status: 404 });
+    }
+    const userId = user.id;
+
+    // Returning user.id in a JSON response
+    return new Response(JSON.stringify({ userId }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user ID:', error);
+    return new Response(`Error fetching user ID: ${error}`, { status: 500 });
+  }
+}
