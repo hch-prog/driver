@@ -1,3 +1,4 @@
+
 CREATE TABLE IF NOT EXISTS User (
   id TEXT PRIMARY KEY,
   name TEXT,
@@ -42,8 +43,20 @@ CREATE TABLE IF NOT EXISTS File (
   contentType TEXT,
   size INTEGER,
   userId TEXT,
+  folder TEXT,   
+  description TEXT,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES User(id),
-  folder TEXT;
-  description TEXT
+  FOREIGN KEY (userId) REFERENCES User(id)
 );
+
+CREATE TABLE IF NOT EXISTS Folder (
+  id TEXT PRIMARY KEY,
+  isFolder BOOLEAN,    
+  folderName TEXT,     
+  folderDescription TEXT, 
+  userId TEXT,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES User(id)
+);
+
+

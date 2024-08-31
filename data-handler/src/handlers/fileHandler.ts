@@ -45,7 +45,7 @@ export async function getUserFiles(request: Request, env: any) {
     const userId = url.searchParams.get('userId');
 
     if (!userId) {
-      return new Response('Missing userId query parameter', { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing userId query parameter' }), { status: 400 });
     }
 
     console.log(`Fetching files for userId: ${userId}`);
@@ -54,7 +54,7 @@ export async function getUserFiles(request: Request, env: any) {
 
     if (result.results.length === 0) {
       console.log('No files found for the user');
-      return new Response('No files found', { status: 404 });
+      return new Response(JSON.stringify({ files: [] }), { status: 200 }); 
     }
 
     console.log(`Found ${result.results.length} files for userId: ${userId}`);
@@ -65,32 +65,65 @@ export async function getUserFiles(request: Request, env: any) {
     });
   } catch (error) {
     console.error('Error fetching files:', error);
-    return new Response(`Error fetching files: ${error}`, { status: 500 });
+    return new Response(JSON.stringify({ error: `Error fetching files: ${error.message}` }), { status: 500 });
   }
 }
+
+
+export async function getUserFolders(request: Request, env: any) {
+  try {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Missing userId query parameter' }), { status: 400 });
+    }
+
+    console.log(`Fetching folders for userId: ${userId}`);
+
+    const result = await env.DB.prepare("SELECT * FROM Folder WHERE userId = ?").bind(userId).all();
+
+    if (!result.results || result.results.length === 0) {
+      console.log('No folders found for the user');
+      return new Response(JSON.stringify({ folders: [] }), { status: 200 });
+    }
+
+    console.log(`Found ${result.results.length} folders for userId: ${userId}`);
+
+    return new Response(JSON.stringify({ folders: result.results }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error fetching folders:', error);
+    return new Response(JSON.stringify({ error: `Error fetching folders: ${error.message}` }), { status: 500 });
+  }
+}
+
+
+
 
 export async function getFile(request: Request, env: any) {
   try {
     const url = new URL(request.url);
-    const fileId = url.pathname.split('/').pop(); // Extract the fileId from the URL
+    const fileId = url.pathname.split('/').pop();  
 
     if (!fileId) {
       return new Response('File ID is required', { status: 400 });
     }
 
-    // Fetch file metadata from the database
     const fileMetadata = await env.DB.prepare('SELECT * FROM File WHERE id = ?').bind(fileId).first();
 
     if (!fileMetadata) {
       return new Response('File not found', { status: 404 });
     }
 
-    // Construct the file URL from the metadata
+   
     const fileUrl = fileMetadata.url;
 
     console.log('Fetching file from URL:', fileUrl);
 
-    // Fetch the actual file from the storage (R2 or other storage)
+   
     const fileResponse = await fetch(fileUrl);
 
     if (!fileResponse.ok) {
@@ -98,7 +131,7 @@ export async function getFile(request: Request, env: any) {
       return new Response('Error fetching file from storage', { status: 500 });
     }
 
-    // Return the file content
+
     return new Response(fileResponse.body, {
       status: 200,
       headers: {
@@ -111,11 +144,6 @@ export async function getFile(request: Request, env: any) {
     return new Response('Failed to fetch file', { status: 500 });
   }
 }
-
-
-
-
-
 
 
 export async function getUserId(request: Request, env: any) {

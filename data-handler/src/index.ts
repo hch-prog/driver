@@ -1,12 +1,13 @@
 import { testD1AndR2 } from "./handlers/testHandlers";
 import { handleUpload } from "./handlers/uploadHandler";
-import { getUserFiles, createUser, findUser, getUserId, getFile } from "./handlers/fileHandler";
-import { createFolder, addFileToFolder, getUserData } from "./handlers/filesHandler";
+import { getUserFiles, createUser, findUser, getUserId, getFile, getUserFolders } from "./handlers/fileHandler";
+import {  fileUpload, folderUpload, getUserData } from "./handlers/filesHandler";
 
 export default {
   async fetch(request: Request, env: any) {
     const url = new URL(request.url);
-    let response: Response;
+    let response: Response = new Response('Not found', { status: 404 }); 
+
 
     const pathname = url.pathname;
 
@@ -14,7 +15,7 @@ export default {
       if (pathname.startsWith('/get-file/')) {
         const fileId = pathname.split("/").pop();
         if (fileId) {
-          response = await getFile(request, env); // Pass the request object here
+          response = await getFile(request, env); 
         } else {
           response = new Response('File ID not provided', { status: 400 });
         }
@@ -32,8 +33,14 @@ export default {
           case '/api/get-user-files':
             response = await getUserFiles(request, env);
             break;
-          case '/get-file/': 
-            response = await getFile(request, env);
+          case '/api/get-user-folder':
+            response = await getUserFolders(request, env);
+            break;
+          case '/get-file':
+            const fileId = url.searchParams.get("id");
+            if (!fileId) {
+              response = new Response('File ID is required', { status: 400 });
+            } 
             break;
           case '/get-userid':
             response = await getUserId(request, env);
@@ -44,15 +51,17 @@ export default {
           case '/find-user':
             response = await findUser(request, env);
             break;
-          case '/create-folder':
-            response = await createFolder(request, env);
-            break;
-          case '/add-file-to-folder':
-            response = await addFileToFolder(request, env);
-            break;
           case '/get-user-data':
             response = await getUserData(request, env);
             break;
+          case '/folder-create':
+            response = await folderUpload(request, env);
+            break;
+
+          case '/file-upload':
+            response = await fileUpload(request, env);
+            break;
+
 
           default:
             response = new Response('Not found', { status: 404 });

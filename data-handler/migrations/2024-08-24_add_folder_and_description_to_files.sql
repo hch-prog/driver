@@ -1,2 +1,0 @@
-ALTER TABLE File ADD COLUMN folder TEXT;
-ALTER TABLE File ADD COLUMN description TEXT;

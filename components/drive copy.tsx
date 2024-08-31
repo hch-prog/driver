@@ -12,21 +12,21 @@ import { Folder } from './Folder';
 
 export function Drive() {
   const [files, setFiles] = useState<any[]>([]);
-  const [folders, setFolders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [showUpload, setShowUpload] = useState(false);
   const [showFolder, setShowFolder] = useState(false);
   const { data: session } = useSession();
-  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (session?.user?.email) {
-      fetchUserId();
+      handleFetchFiles(); 
     }
   }, [session]);
 
-  const fetchUserId = async () => {
+  const handleFetchFiles = async () => {
+    setLoading(true); 
+
     try {
       const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
       if (!baseUrl) {
@@ -34,12 +34,13 @@ export function Drive() {
         return;
       }
 
-      const email = session?.user?.email;
+      const email = session?.user?.email; 
       if (!email) {
         alert("User email not found in session");
         return;
       }
 
+     
       const userIdResponse = await fetch(`${baseUrl}/get-user-data`, {
         method: 'POST',
         headers: {
@@ -54,27 +55,13 @@ export function Drive() {
 
       const { userId } = await userIdResponse.json();
       console.log('User ID fetched successfully:', userId);
-      setUserId(userId);
 
-      // Fetch files and folders separately
-      await fetchFiles(userId);
-      await fetchFolders(userId);
-    } catch (error) {
-      console.error('Error fetching user ID:', error);
-      alert('An error occurred while fetching user ID.');
-    }
-  };
-
-  const fetchFiles = async (userId: string) => {
-    setLoading(true);
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+   
       const filesResponse = await fetch(`${baseUrl}/api/get-user-files?userId=${userId}`);
       if (filesResponse.ok) {
-        const filesData = await filesResponse.json();
-        console.log('Files fetched successfully:', filesData.files);
-        setFiles(filesData.files);
+        const data = await filesResponse.json();
+        console.log('Files fetched successfully:', data.files);
+        setFiles(data.files);
       } else {
         console.error('Failed to fetch files. Status:', filesResponse.status);
         alert('Failed to fetch files. Please try again.');
@@ -87,41 +74,23 @@ export function Drive() {
     }
   };
 
-  const fetchFolders = async (userId: string) => {
-    setLoading(true);
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
-      const foldersResponse = await fetch(`${baseUrl}/api/get-user-folders?userId=${userId}`);
-      if (foldersResponse.ok) {
-        const foldersData = await foldersResponse.json();
-        console.log('Folders fetched successfully:', foldersData.folders);
-        setFolders(foldersData.folders);
-      } else {
-        console.error('Failed to fetch folders. Status:', foldersResponse.status);
-        alert('Failed to fetch folders. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error fetching folders:', error);
-      alert('An error occurred while fetching folders.', error);
-    } finally {
-      setLoading(false);
+  const handleFileClick = (fileId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+    if (!baseUrl) {
+      alert("Base URL for the backend is not defined");
+      return;
     }
+    console.log(fileId);
+    const url = `${baseUrl}/get-file/${fileId}`;
+    window.open(url, '_blank');
   };
 
-  const handleFileClick = (file: any) => {
-    console.log('File clicked:', file);
-    
-  };
-
-  const handleFolderClick = (folder: any) => {
-    console.log('Folder clicked:', folder);
-  
-  };
 
   const handleSignOut = async () => {
+    console.log("Signing out...");
     try {
       await signOut({ redirect: false });
+      console.log("Signed out successfully. Redirecting to home...");
       router.push('/');
     } catch (error) {
       console.error("Error during sign-out:", error);
@@ -129,18 +98,13 @@ export function Drive() {
   };
 
   const handleUpload = () => {
-    setShowUpload(true);
+    setShowUpload(!showUpload);
     setShowFolder(false);
   };
 
   const handleFolder = () => {
-    setShowFolder(true);
+    setShowFolder(!showFolder);
     setShowUpload(false);
-  };
-
-  const closeModals = () => {
-    setShowUpload(false);
-    setShowFolder(false);
   };
 
   return (
@@ -152,7 +116,7 @@ export function Drive() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <span>{session?.user?.name}</span>
+          <span>{session?.user?.name}</span> {/* Display the user's name */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -162,107 +126,98 @@ export function Drive() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 p-2 bg-white shadow-lg rounded-lg z-50 bg-opacity-90 backdrop-filter backdrop-blur-sm"
-            >
-              <DropdownMenuLabel className="font-semibold text-lg text-gray-700">Arc Drive</DropdownMenuLabel>
-              <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-                <Link href="/settings" className="block w-full">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-                Help
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem
-                onClick={handleSignOut}
-                className="text-red-600 hover:text-red-800 hover:bg-gray-100 rounded-md"
-              >
-                Sign out
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Arc Drive</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem><Link href="/settings">Settings</Link></DropdownMenuItem>
+              <DropdownMenuItem>Help</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </header>
-
       <div className="flex flex-1">
+        <aside className="bg-muted/20 border-r hidden md:flex flex-col gap-2 p-4">
+          <Button variant="ghost" className="justify-start gap-2 px-2">
+            <PlusIcon className="h-5 w-5" />
+            New
+          </Button>
+          <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleUpload}>
+            <UploadIcon className="h-5 w-5" />
+            Upload
+          </Button>
+          <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleFolder}>
+            <FolderIcon className="h-5 w-5" />
+            Folders
+          </Button>
+          <Button variant="ghost" className="justify-start gap-2 px-2">
+            <FileIcon className="h-5 w-5" />
+            Files
+          </Button>
+          <Button variant="ghost" className="justify-start gap-2 px-2">
+            <TrashIcon className="h-5 w-5" />
+            Trash
+          </Button>
+        </aside>
         <main className={`flex-1 p-4 sm:p-6 relative`}>
           {(showUpload || showFolder) && (
-            <div
-              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-10"
-              onClick={closeModals}
-            >
-              <div className="bg-white p-6 rounded-lg max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-                 {showUpload && <Upload onClose={closeModals} userId={userId} />}
-                 {showFolder && <Folder onClose={closeModals} userId={userId} />}
+            <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-10">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+                {showUpload && <Upload />}
+                {showFolder && <Folder />}
               </div>
             </div>
           )}
-
-          <div className="grid gap-4">
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-semibold">My Drive</div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleUpload}>
-                  <UploadIcon className="h-5 w-5" />
-                  Upload File
-                </Button>
-                <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleFolder}>
-                  <FolderIcon className="h-5 w-5" />
-                  Add Folder
-                </Button>
+          {!showUpload && !showFolder && (
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between">
+                <div className="text-lg font-semibold">My Drive</div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon">
+                    <LayoutGridIcon className="h-5 w-5" />
+                    <span className="sr-only">Grid view</span>
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <ListIcon className="h-5 w-5" />
+                    <span className="sr-only">List view</span>
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <MoveHorizontalIcon className="h-5 w-5" />
+                    <span className="sr-only">More options</span>
+                  </Button>
+                </div>
               </div>
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {files.map((file) => (
+                    <Card key={file.id} className="group" onClick={() => handleFileClick(file.id)}>
+                      <CardContent className="flex flex-col gap-2">
+                        <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
+                          <FileIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="font-medium truncate">{file.fileName}</div>
+                        <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
+                      </CardContent>
+                      <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon">
+                          <MoveHorizontalIcon className="h-4 w-4" />
+                          <span className="sr-only">More options</span>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {folders.map((folder) => (
-                  <Card key={folder.id} className="group" onClick={() => handleFolderClick(folder)}>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                        <FolderIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="font-medium truncate">{folder.folderName}</div>
-                      <div className="text-xs text-muted-foreground truncate">45 items</div> {/* Static for now */}
-                    </CardContent>
-                    <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon">
-                        <MoveHorizontalIcon className="h-4 w-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-                
-                {files.map((file) => (
-                  <Card key={file.id} className="group" onClick={() => handleFileClick(file)}>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                        <FileIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="font-medium truncate">{file.fileName}</div>
-                      <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon">
-                        <MoveHorizontalIcon className="h-4 w-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
         </main>
       </div>
     </div>
   );
 }
-
-
 
 function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
