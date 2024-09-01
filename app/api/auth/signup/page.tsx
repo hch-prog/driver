@@ -1,4 +1,4 @@
-import { SignUp } from "@/components/component/signup";
+import { SignUp } from "@/components/signup";
 
 
 export default function Home() {
