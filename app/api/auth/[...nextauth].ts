@@ -1,8 +1,8 @@
-
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { NextAuthOptions } from 'next-auth';
- 
+import bcrypt from 'bcrypt';
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -12,11 +12,16 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        if (!credentials || !credentials.email || !credentials.password) {
+          throw new Error('Missing credentials');
+        }
+
         const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
 
+        // Fetch the user from the database
         const response = await fetch(`${baseUrl}/find-user`, {
           method: 'POST',
-          body: JSON.stringify(credentials),
+          body: JSON.stringify({ email: credentials.email }),
           headers: { 'Content-Type': 'application/json' },
         });
 
@@ -25,7 +30,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await response.json();
-        if (user) {
+
+        // Verify the password
+        if (user && await bcrypt.compare(credentials.password, user.password)) {
           return user;
         }
         return null;
@@ -44,7 +51,3 @@ export const authOptions: NextAuthOptions = {
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
-
-
-
-

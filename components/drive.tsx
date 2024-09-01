@@ -195,7 +195,7 @@ export function Drive() {
               onClick={closeModals}
             >
               <div className="bg-white p-6 rounded-lg max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-                {showUpload && <Upload onClose={closeModals} userId={userId} />}
+                {showUpload && <Upload onClose={closeModals} userId={userId || ''} />}
                 {showFolder && <Folder onClose={closeModals} userId={userId} />}
               </div>
             </div>
