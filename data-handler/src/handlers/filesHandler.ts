@@ -99,7 +99,7 @@ export async function fileUpload(request: Request, env: any) {
 
   } catch (error) {
     console.error('Error uploading file:', error);
-    return new Response(`Error during upload: ${error.message}`, { status: 500 });
+    return new Response(`Error during upload: ${error}`, { status: 500 });
   }
 }
 

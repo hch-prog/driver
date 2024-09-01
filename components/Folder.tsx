@@ -22,7 +22,8 @@ export function Folder({ onClose, userId }: UploadProps) {
     }
 
     try {
-      const response = await fetch('https://cloudflare-backend.chaniyara-harsh26.workers.dev/folder-create', {
+      const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+      const response = await fetch(`${baseUrl}/folder-create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

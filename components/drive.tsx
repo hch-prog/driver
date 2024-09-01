@@ -53,10 +53,10 @@ export function Drive() {
       }
 
       const { userId } = await userIdResponse.json();
-      console.log('User ID fetched successfully:', userId);
+      
       setUserId(userId);
 
-      // Fetch files and folders separately
+      
       await fetchFiles(userId);
       await fetchFolders(userId);
     } catch (error) {
@@ -73,10 +73,9 @@ export function Drive() {
       const filesResponse = await fetch(`${baseUrl}/api/get-user-files?userId=${userId}`);
       if (filesResponse.ok) {
         const filesData = await filesResponse.json();
-        console.log('Files fetched successfully:', filesData.files);
         setFiles(filesData.files);
       } else {
-        console.error('Failed to fetch files. Status:', filesResponse.status);
+        console.error('Failed to fetch files. Status:');
         alert('Failed to fetch files. Please try again.');
       }
     } catch (error) {
@@ -88,35 +87,37 @@ export function Drive() {
   };
 
   const fetchFolders = async (userId: string) => {
-    setLoading(true);
-
     try {
       const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
-      const foldersResponse = await fetch(`${baseUrl}/api/get-user-folders?userId=${userId}`);
-      if (foldersResponse.ok) {
-        const foldersData = await foldersResponse.json();
-        console.log('Folders fetched successfully:', foldersData.folders);
-        setFolders(foldersData.folders);
-      } else {
-        console.error('Failed to fetch folders. Status:', foldersResponse.status);
-        alert('Failed to fetch folders. Please try again.');
+      const response = await fetch(`${baseUrl}/api/get-user-folder?userId=${userId}`);
+
+      if (!response.ok) {
+        console.error('Failed to fetch folders. Status:', response.status);
+        return;
       }
+
+      const data = await response.json();
+      const folderNames = data.folders.map((folder: { folderName: string }) => folder.folderName);
+      setFolders(folderNames);
+
     } catch (error) {
       console.error('Error fetching folders:', error);
-      alert('An error occurred while fetching folders.', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleFileClick = (file: any) => {
-    console.log('File clicked:', file);
-    
+  const handleFileClick = (fileId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+    if (!baseUrl) {
+      alert("Base URL for the backend is not defined");
+      return;
+    }
+    const url = `${baseUrl}/get-file/${fileId}`;
+    window.open(url, '_blank'); 
   };
 
   const handleFolderClick = (folder: any) => {
     console.log('Folder clicked:', folder);
-  
+
   };
 
   const handleSignOut = async () => {
@@ -194,8 +195,8 @@ export function Drive() {
               onClick={closeModals}
             >
               <div className="bg-white p-6 rounded-lg max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-                 {showUpload && <Upload onClose={closeModals} userId={userId} />}
-                 {showFolder && <Folder onClose={closeModals} userId={userId} />}
+                {showUpload && <Upload onClose={closeModals} userId={userId} />}
+                {showFolder && <Folder onClose={closeModals} userId={userId} />}
               </div>
             </div>
           )}
@@ -218,13 +219,13 @@ export function Drive() {
               <div>Loading...</div>
             ) : (
               <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {folders.map((folder) => (
-                  <Card key={folder.id} className="group" onClick={() => handleFolderClick(folder)}>
+                {folders.map((folderName) => (
+                  <Card key={folderName} className="group" onClick={() => handleFolderClick(folderName)}>
                     <CardContent className="flex flex-col gap-2">
                       <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
                         <FolderIcon className="h-8 w-8 text-muted-foreground" />
                       </div>
-                      <div className="font-medium truncate">{folder.folderName}</div>
+                      <div className="font-medium truncate">{folderName}</div>
                       <div className="text-xs text-muted-foreground truncate">45 items</div> {/* Static for now */}
                     </CardContent>
                     <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
@@ -235,9 +236,9 @@ export function Drive() {
                     </CardFooter>
                   </Card>
                 ))}
-                
+
                 {files.map((file) => (
-                  <Card key={file.id} className="group" onClick={() => handleFileClick(file)}>
+                  <Card key={file.id} className="group" onClick={() =>  handleFileClick(file.id)}>
                     <CardContent className="flex flex-col gap-2">
                       <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
                         <FileIcon className="h-8 w-8 text-muted-foreground" />
@@ -253,6 +254,7 @@ export function Drive() {
                     </CardFooter>
                   </Card>
                 ))}
+
               </div>
             )}
           </div>
@@ -260,6 +262,7 @@ export function Drive() {
       </div>
     </div>
   );
+
 }
 
 

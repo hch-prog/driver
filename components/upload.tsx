@@ -29,7 +29,8 @@ export function Upload({ onClose, userId }: UploadProps) {
     formData.append("name", name); 
 
     try {
-      const response = await fetch("https://cloudflare-backend.chaniyara-harsh26.workers.dev/file-upload", {
+      const baseUrl=process.env.NEXTAUTH_PUBLIC_NEXT_PUBLIC_CLOUDFLARE_BASE_URL
+      const response = await fetch(`${baseUrl}/file-upload`, {
         method: "POST",
         body: formData,
       });

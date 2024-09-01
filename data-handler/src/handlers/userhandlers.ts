@@ -1,31 +1,5 @@
 // src/handlers/userHandlers.ts
 
-export async function getUsers(env: any) {
-  try {
-      const result = await env.DB.prepare(`
-          SELECT 
-              u.id AS userId, 
-              u.name AS userName, 
-              u.email AS userEmail,
-              a.provider AS accountProvider, 
-              a.providerAccountId AS accountId, 
-              s.sessionToken, 
-              s.expires AS sessionExpires,
-              f.fileName, 
-              f.url AS fileUrl,
-              f.contentType AS fileContentType,
-              f.size AS fileSize
-          FROM User u
-          LEFT JOIN Account a ON u.id = a.userId
-          LEFT JOIN Session s ON u.id = s.userId
-          LEFT JOIN File f ON u.id = f.userId
-      `).all();
-
-      return new Response(JSON.stringify(result), { status: 200 });
-  } catch (error) {
-      return new Response(`Error fetching users: ${error.message}`, { status: 500 });
-  }
-}
 
   
   export async function addUser(request: Request, env: any) {
