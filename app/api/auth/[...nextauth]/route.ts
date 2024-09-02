@@ -1,43 +1,6 @@
 import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { NextAuthOptions } from 'next-auth';
+import { authOptions } from "@/lib/auth";
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'text' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+const handler = NextAuth(authOptions);
 
-        const response = await fetch(`${baseUrl}/find-user`, {
-          method: 'POST',
-          body: JSON.stringify(credentials),
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to authenticate');
-        }
-
-        const user = await response.json();
-        if (user) {
-          return user;
-        }
-        return null;
-      },
-    }),
-  ],
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-  },
-  session: {
-    strategy: 'jwt',
-  },
-};
-
-export default NextAuth(authOptions);
+export { handler as GET, handler as POST };
