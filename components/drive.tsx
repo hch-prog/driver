@@ -17,14 +17,20 @@ export function Drive() {
   const router = useRouter();
   const [showUpload, setShowUpload] = useState(false);
   const [showFolder, setShowFolder] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [page,setPage]=useState(false);
 
   useEffect(() => {
-    if (session?.user?.email) {
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+      router.push('/api/auth/signin'); 
+    } else if (session?.user?.email) {
+      console.log("works");
       fetchUserId();
     }
-  }, [session]);
+  }, [session, status,router]);
 
   const fetchUserId = async () => {
     try {
@@ -86,6 +92,22 @@ export function Drive() {
     }
   };
 
+  const fetchFolderFiles= async(userId:String)=>{
+    setLoading(false);
+
+    try {
+     setTimeout(()=>{
+      setLoading(false);
+     },5000)
+     console.log("start")
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      alert('An error occurred while fetching files.');
+    } finally {
+      setLoading(true);
+    }
+  }
+
   const fetchFolders = async (userId: string) => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
@@ -115,9 +137,14 @@ export function Drive() {
     window.open(url, '_blank'); 
   };
 
-  const handleFolderClick = (folder: any) => {
-    console.log('Folder clicked:', folder);
 
+  
+
+  const handleFolderClick = async (userId: String) => {
+    //
+    setPage(true);
+    await fetchFolderFiles(userId);
+    
   };
 
   const handleSignOut = async () => {
@@ -146,122 +173,147 @@ export function Drive() {
 
   return (
     <div className="relative flex flex-col min-h-screen">
-      <header className="flex h-16 items-center justify-between px-6 border-b">
-        <Link href="#" className="flex items-center gap-2" prefetch={false}>
-          <HardDriveDownloadIcon className="h-6 w-6" />
-          <span className="text-lg font-semibold">Arc</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <span>{session?.user?.name}</span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="w-8 h-8 border">
-                  <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
-                  <AvatarFallback>{session?.user?.name ? session.user.name.charAt(0) : 'AC'}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 p-2 bg-white shadow-lg rounded-lg z-50 bg-opacity-90 backdrop-filter backdrop-blur-sm"
-            >
-              <DropdownMenuLabel className="font-semibold text-lg text-gray-700">Arc Drive</DropdownMenuLabel>
-              <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-                <Link href="/settings" className="block w-full">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-                Help
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem
-                onClick={handleSignOut}
-                className="text-red-600 hover:text-red-800 hover:bg-gray-100 rounded-md"
-              >
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-
-      <div className="flex flex-1">
-        <main className={`flex-1 p-4 sm:p-6 relative`}>
-          {(showUpload || showFolder) && (
-            <div
-              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-10"
-              onClick={closeModals}
-            >
-              <div className="bg-white p-6 rounded-lg max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-                {showUpload && <Upload onClose={closeModals} userId={userId} />}
-                {showFolder && <Folder onClose={closeModals} userId={userId} />}
-              </div>
+      
+        <>
+          <header className="flex h-16 items-center justify-between px-6 border-b">
+            <Link href="#" className="flex items-center gap-2" prefetch={false}>
+              <HardDriveDownloadIcon className="h-6 w-6" />
+              <span className="text-lg font-semibold">Arc</span>
+            </Link>
+  
+            <div className="flex items-center gap-2">
+              <span>{session?.user?.name}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="w-8 h-8 border">
+                      <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
+                      <AvatarFallback>{session?.user?.name ? session.user.name.charAt(0) : 'AC'}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 p-2 bg-white shadow-lg rounded-lg z-50 bg-opacity-90 backdrop-filter backdrop-blur-sm"
+                >
+                  <DropdownMenuLabel className="font-semibold text-lg text-gray-700">Arc Drive</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+                    <Link href="/settings" className="block w-full">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+                    <Link href="/help" className="block w-full">Help</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="text-red-600 hover:text-red-800 hover:bg-gray-100 rounded-md"
+                  >
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          )}
+          </header>
+  
+          <div className="flex flex-1">
+            <main className={`flex-1 p-4 sm:p-6 relative`}>
+              {(showUpload || showFolder) && (
+                <div
+                  className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-10"
+                  onClick={closeModals}
+                >
+                  <div className="bg-white p-6 rounded-lg max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+                    {showUpload && <Upload onClose={closeModals} userId={userId || ''} />}
+                    {showFolder && <Folder onClose={closeModals} userId={userId} />}
+                  </div>
+                </div>
+              )}
+  
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-semibold">My Drive</div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleUpload}>
+                      <UploadIcon className="h-5 w-5" />
+                      Upload File
+                    </Button>
+                    {!page ? (
+                      <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleFolder}>
+                      <FolderIcon className="h-5 w-5" />
+                      Add Folder
+                    </Button>
+                  ):(
+                  <Button className="justify-start gap-2 px-2" onClick={()=>setPage(false)}>
+                      <BackIcon className="h-5 w-5" />
+                      Back
+                    </Button>
+                  )}
+                    
+                  </div>
+                </div>
+              
+              
+               
+                {!page?
+                    (loading ? (
+                        <div>Loading...</div>
+                           ) : (
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {folders.map((folderName) => (
+                      <Card key={folderName} className="group" onClick={() => handleFolderClick(folderName)}>
+                        <CardContent className="flex flex-col gap-2">
+                          <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
+                            <FolderIcon className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <div className="font-medium truncate">{folderName}</div>
+                          <div className="text-xs text-muted-foreground truncate">45 items</div> {/* Static for now */}
+                        </CardContent>
+                        <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon">
+                            <MoveHorizontalIcon className="h-4 w-4" />
+                            <span className="sr-only">More options</span>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+  
+                    {files.map((file) => (
+                      <Card key={file.id} className="group" onClick={() => handleFileClick(file.id)}>
+                        <CardContent className="flex flex-col gap-2">
+                          <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
+                            <FileIcon className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <div className="font-medium truncate">{file.fileName}</div>
+                          <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
+                        </CardContent>
+                        <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon">
+                            <MoveHorizontalIcon className="h-4 w-4" />
+                            <span className="sr-only">More options</span>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                ))
+                : ( loading ? (
+                  <div>Loading...</div>
+                     ) : (
+                <h2>pekcepk</h2>)
+                //fetch logic funtion, but they will need to be diaplyed here frist...like how above
 
-          <div className="grid gap-4">
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-semibold">My Drive</div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleUpload}>
-                  <UploadIcon className="h-5 w-5" />
-                  Upload File
-                </Button>
-                <Button variant="ghost" className="justify-start gap-2 px-2" onClick={handleFolder}>
-                  <FolderIcon className="h-5 w-5" />
-                  Add Folder
-                </Button>
+
+                )}
               </div>
-            </div>
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {folders.map((folderName) => (
-                  <Card key={folderName} className="group" onClick={() => handleFolderClick(folderName)}>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                        <FolderIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="font-medium truncate">{folderName}</div>
-                      <div className="text-xs text-muted-foreground truncate">45 items</div> {/* Static for now */}
-                    </CardContent>
-                    <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon">
-                        <MoveHorizontalIcon className="h-4 w-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-
-                {files.map((file) => (
-                  <Card key={file.id} className="group" onClick={() =>  handleFileClick(file.id)}>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="bg-muted/50 rounded-md flex items-center justify-center aspect-square">
-                        <FileIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="font-medium truncate">{file.fileName}</div>
-                      <div className="text-xs text-muted-foreground truncate">{(file.size / 1024).toFixed(2)} KB</div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon">
-                        <MoveHorizontalIcon className="h-4 w-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-
-              </div>
-            )}
+            </main>
           </div>
-        </main>
-      </div>
+        </>
+    
     </div>
   );
+  
 
 }
 
@@ -295,6 +347,15 @@ function FolderIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+function BackIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  );
+}
+
 
 function LayoutGridIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
