@@ -29,7 +29,7 @@ export function Upload({ onClose, userId }: UploadProps) {
     formData.append("name", name); 
 
     try {
-      const baseUrl=process.env.NEXTAUTH_PUBLIC_NEXT_PUBLIC_CLOUDFLARE_BASE_URL
+      const baseUrl=process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
       const response = await fetch(`${baseUrl}/file-upload`, {
         method: "POST",
         body: formData,
