@@ -4,16 +4,17 @@ import bcrypt from 'bcryptjs';
 export async function findUser(request: Request, env: any) {
   try {
     const { email } = await request.json();
-    const result = await env.DB.prepare('SELECT * FROM User WHERE email = ?').bind(email).first();
-
+    const result = await env.DB.prepare('SELECT id, email, password FROM User WHERE email = ?')
+      .bind(email)
+      .first();
     if (!result) {
-      return new Response('User not found', { status: 404 });
+      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     }
 
-    return new Response(JSON.stringify(result), { status: 200 });
+    return new Response(JSON.stringify(result), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Error finding user:', error);
-    return new Response('Error finding user', { status: 500 });
+    return new Response(JSON.stringify({ error: 'Error finding user' }), { status: 500 });
   }
 }
 
