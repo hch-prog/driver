@@ -55,6 +55,15 @@ export async function createFolder(request: Request, env: any) {
   }
 }
 
+export async function folderFile(request:Request, env:any) {
+  try {
+    console.log("works");
+  } catch (error) {
+    console.error('Error fetching the files:', error);
+    return new Response(`Error during upload: ${error}`, { status: 500 });
+  }
+}
+
 
 
 export async function fileUpload(request: Request, env: any) {

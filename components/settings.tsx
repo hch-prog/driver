@@ -57,7 +57,7 @@ export function Settings() {
           <span className="text-2xl font-bold text-foreground">Arc</span>
         </Link>
         <nav className="flex items-center gap-4">
-         
+          
         </nav>
       </header>
       <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
@@ -69,7 +69,7 @@ export function Settings() {
           </div>
           <div className="grid gap-6">
             <div className="space-y-2">
-              <h2 className="text-xl font-bold">Update Email Here</h2>
+              <h2 className="text-xl font-bold">Update You Email Here</h2>
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="name">Email</Label>
@@ -84,7 +84,8 @@ export function Settings() {
                 <Button type="submit" className="w-full">
                 Update Email 
                 </Button>
-                <h2 className="text-xl font-bold">Update Password Here</h2>
+                
+                <h2 className="text-xl font-bold">Update You Passowrd Here</h2>
                 <div className="space-y-2">
                   <Label htmlFor="email">Current Password</Label>
                   <Input

@@ -5,7 +5,8 @@ export default function HelpPage() {
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-8">
             <div className="max-w-3xl mx-auto">
-                <h1 className="text-4xl font-bold text-gray-800 mb-6">Help & Support</h1>
+
+                <h1 className="text-4xl font-bold text-gray-800 mb-6">Help &amp; Support</h1>
 
                 <section className="mb-8">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-4">Getting Started</h2>
@@ -20,19 +21,25 @@ export default function HelpPage() {
                         <div>
                             <h3 className="text-lg font-medium text-gray-800">How do I upload files?</h3>
                             <p className="text-gray-600">
-                                You can upload files by clicking the "Upload File" button on your dashboard. Select the files from your computer, and they will be added to your drive.
+
+                                You can upload files by clicking the &quot;Upload File&quot; button on your dashboard. Select the files from your computer, and they will be added to your drive.
+
                             </p>
                         </div>
                         <div>
                             <h3 className="text-lg font-medium text-gray-800">How do I create folders?</h3>
                             <p className="text-gray-600">
-                                To create a folder, click on the "Add Folder" button. You can name the folder and start adding files to it immediately.
+
+                                To create a folder, click on the &quot;Add Folder&quot; button. You can name the folder and start adding files to it immediately.
+
                             </p>
                         </div>
                         <div>
                             <h3 className="text-lg font-medium text-gray-800">How do I share files?</h3>
                             <p className="text-gray-600">
-                                You can share files by selecting the file and clicking the "Share" button. Enter the email of the person you want to share with, and they will receive a link to access the file.
+
+                                You can share files by selecting the file and clicking the &quot;Share&quot; button. Enter the email of the person you want to share with, and they will receive a link to access the file.
+
                             </p>
                         </div>
                     </div>

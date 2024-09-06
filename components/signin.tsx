@@ -1,30 +1,38 @@
 'use client'
-import Link from "next/link"
-import { Label } from "@/ui/label"
-import { Input } from "@/ui/input"
-import { Button } from "@/ui/button"
-import { signIn } from 'next-auth/react'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Label } from '@/ui/label';
+import { Input } from '@/ui/input';
+import { Button } from '@/ui/button';
+import { signIn } from 'next-auth/react';
 
 export function SignIn() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const router = useRouter(); 
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+
+    setError('');
+
     const result = await signIn('credentials', {
       redirect: false,
       email,
       password,
-    })
+    });
 
     if (result?.error) {
-      setError(result.error)
+      setError('Invalid credentials, please try again.');
+    } else if (result?.ok) {
+      router.push('/home');
     } else {
-      window.location.href = '/home'
+      setError('An unexpected error occurred. Please try again.');
     }
-  }
+  };
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
@@ -104,7 +112,16 @@ export function SignIn() {
   )
 }
 
-function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
+// Page component that uses SignIn
+
+export default function SignInPage() {
+  return <SignIn />;
+}
+
+
+
+
+function HardDriveDownloadIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -120,7 +137,7 @@ function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <path d="M12 2v8" />
       <path d="M16 6L12 10 8 6" />
-      <rect width="20" height="8" x="2" y="14" rx="2"/>
+      <rect width="20" height="8" x="2" y="14" rx="2" />
       <path d="M6 18h.01" />
       <path d="M10 18h.01" />
     </svg>

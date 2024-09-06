@@ -23,14 +23,15 @@ export function Drive() {
 
   useEffect(() => {
     if (status === 'loading') return;
-
     if (status === 'unauthenticated') {
       router.push('/api/auth/signin'); 
     } else if (session?.user?.email) {
       console.log("works");
       fetchUserId();
     }
-  }, [session, status,router]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, status, router]);
 
   const fetchUserId = async () => {
     try {
@@ -247,7 +248,9 @@ export function Drive() {
                   ):(
                   <Button className="justify-start gap-2 px-2" onClick={()=>setPage(false)}>
                       <BackIcon className="h-5 w-5" />
-                      Back
+
+                     Back
+
                     </Button>
                   )}
                     

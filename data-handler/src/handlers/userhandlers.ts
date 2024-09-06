@@ -10,7 +10,7 @@
         .run();
       return new Response("User added successfully", { status: 201 });
     } catch (error) {
-      return new Response(`Error adding user: ${error.message}`, { status: 500 });
+      return new Response(`Error adding user: ${error}`, { status: 500 });
     }
   }
   
@@ -25,6 +25,6 @@
         return new Response("User not found", { status: 404 });
       }
     } catch (error) {
-      return new Response(`Error fetching user: ${error.message}`, { status: 500 });
+      return new Response(`Error fetching user: ${error}`, { status: 500 });
     }
   }
