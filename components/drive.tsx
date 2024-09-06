@@ -23,15 +23,16 @@ export function Drive() {
 
   useEffect(() => {
     if (status === 'loading') return;
-
+  
     if (status === 'unauthenticated') {
       router.push('/api/auth/signin'); 
     } else if (session?.user?.email) {
       console.log("works");
       fetchUserId();
     }
-  }, [session, status,router]);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, status, router]);
+  
   const fetchUserId = async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
