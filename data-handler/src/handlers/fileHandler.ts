@@ -140,26 +140,4 @@ export async function getFile(fileId: string, env: any) {
   }
 }
 
-export async function getUserId(request: Request, env: any) {
-  try {
-    const { email } = await request.json();
-    if (!email) {
-      return new Response('Email is required', { status: 400 });
-    }
-    const user = await env.DB.prepare('SELECT id FROM User WHERE email = ?').bind(email).first();
-    if (!user) {
-      return new Response('User not found', { status: 404 });
-    }
-    const userId = user.id;
 
-    return new Response(JSON.stringify({ userId }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching user ID:', error);
-    return new Response(`Error fetching user ID: ${error}`, { status: 500 });
-  }
-}

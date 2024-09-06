@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -10,23 +11,44 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
 
-        const response = await fetch(`${baseUrl}/find-user`, {
-          method: 'POST',
-          body: JSON.stringify(credentials),
-          headers: { 'Content-Type': 'application/json' },
-        });
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Missing credentials');
+          }
 
-        if (!response.ok) {
-          throw new Error('Failed to authenticate');
+
+          const response = await fetch(`${baseUrl}/find-user`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials?.email,
+            }),
+          });
+
+
+          if (!response.ok) {
+            return null;
+          }
+
+          const user = await response.json();
+
+
+          const isValidPassword = await verifyPassword(credentials.password, user.password);
+
+          if (!isValidPassword) {
+            return null; 
+          }
+
+         
+          return { id: user.id, email: user.email };
+        } catch (error) {
+          console.error('Error during authorization:', error);
+          return null;
         }
-
-        const user = await response.json();
-        if (user) {
-          return user;
-        }
-        return null;
       },
     }),
   ],
@@ -38,3 +60,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
 };
+
+async function verifyPassword(plainTextPassword: string, hashedPassword: string) {
+  return await bcrypt.compare(plainTextPassword, hashedPassword);
+}

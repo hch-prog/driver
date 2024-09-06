@@ -141,8 +141,7 @@ export function Dashboard() {
     </div>
   )
 }
-
-function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
+function HardDriveDownloadIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -168,7 +167,7 @@ function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
 
 
 
-function CloudIcon(props: React.SVGProps<SVGSVGElement>) {
+function CloudIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       {...props}
@@ -187,7 +186,7 @@ function CloudIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-function FolderSyncIcon(props: React.SVGProps<SVGSVGElement>) {
+function FolderSyncIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       {...props}
@@ -210,7 +209,7 @@ function FolderSyncIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-function HardDriveIcon(props: React.SVGProps<SVGSVGElement>) {
+function HardDriveIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       {...props}
@@ -232,7 +231,7 @@ function HardDriveIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-function ShareIcon(props: React.SVGProps<SVGSVGElement>) {
+function ShareIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       {...props}

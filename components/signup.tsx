@@ -139,7 +139,7 @@ export function SignUp() {
   );
 }
 
-function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
+function HardDriveDownloadIcon(props: Readonly<React.SVGProps<SVGSVGElement>>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

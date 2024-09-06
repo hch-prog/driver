@@ -1,5 +1,5 @@
 
-import { getUserFiles, createUser, findUser, getUserId, getFile, getUserFolders } from "./handlers/fileHandler";
+import { getUserFiles, createUser, findUser, getFile, getUserFolders } from "./handlers/fileHandler";
 import { fileUpload, folderUpload, getUserData } from "./handlers/filesHandler";
 
 
@@ -45,6 +45,7 @@ export default {
           case '/file-upload':
             response = await fileUpload(request, env);
             break;
+          
           default:
             response = new Response('Not found', { status: 404 });
             break;
