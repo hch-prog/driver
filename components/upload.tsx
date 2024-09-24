@@ -5,9 +5,10 @@ import { CloudUploadIcon, UploadIcon } from "lucide-react";
 interface UploadProps {
   onClose: () => void;
   userId: string;
+  folderName?: string; // Ensure this line exists
 }
 
-export function Upload({ onClose, userId }: UploadProps) {
+export const Upload = ({ onClose, userId, folderName }: UploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [name, setName] = useState("");
 

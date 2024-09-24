@@ -7,9 +7,15 @@ import { Card, CardContent, CardFooter } from '@/ui/card';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
-import { Upload } from './upload';
+import { Upload } from './Upload';
 import { Folder } from './Folder';
-import { UploadIcon } from 'lucide-react';
+import { UploadIcon, FolderIcon, MoveHorizontalIcon, FileIcon, BackIcon } from 'lucide-react';
+
+interface UploadProps {
+  onClose: () => void;
+  userId: string;
+  folderName?: string;
+}
 
 export function Drive() {
   const [files, setFiles] = useState<any[]>([]);
@@ -91,35 +97,6 @@ export function Drive() {
     }
   };
 
-  const fetchFolderFiles = async (folderName: string, userId: string) => {
-    setLoading(true);
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
-      const response = await fetch(`${baseUrl}/fetchFolderFiles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ folderName, userId }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setFolderFiles(data.files); // Store fetched folder files
-        setPage(true); // Set the page state to true
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error);
-      }
-    } catch (error) {
-      console.error('Error fetching folder files:', error);
-      alert('An error occurred while fetching folder files.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchFolders = async (userId: string) => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_BASE_URL;
@@ -191,7 +168,6 @@ export function Drive() {
     }
   };
 
-
   const handleSignOut = async () => {
     try {
       await signOut({ redirect: false });
@@ -259,7 +235,7 @@ export function Drive() {
           {(showUpload || showFolder) && (
             <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-10" onClick={closeModals}>
               <div className="bg-white p-6 rounded-lg max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-                {showUpload && <Upload onClose={closeModals} userId={userId || ''} folderName={currentFolderName} />}  {/* folderName added */}
+                <Upload onClose={closeModals} userId={userId || ''} folderName={currentFolderName} />
                 {showFolder && <Folder onClose={closeModals} userId={userId} />}
               </div>
             </div>
@@ -301,8 +277,6 @@ export function Drive() {
                         <div className="font-medium truncate">
                           {folderName.startsWith('/') ? folderName.slice(1) : folderName}
                         </div>
-
-
                       </CardContent>
                       <CardFooter className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon">
@@ -338,7 +312,6 @@ export function Drive() {
               ) : (
                 <div>
                   <div className="flex items-center justify-between">
-
                     <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {folderFiles.length > 0 ? (
                         folderFiles.map((file) => (
@@ -370,58 +343,5 @@ export function Drive() {
         </main>
       </div>
     </div>
-  );
-}
-
-
-
-
-
-
-function HardDriveDownloadIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hard-drive-download">
-      <path d="M12 2v8" />
-      <path d="M16 6L12 10 8 6" />
-      <rect width="20" height="8" x="2" y="14" rx="2" />
-      <path d="M6 18h.01" />
-      <path d="M10 18h.01" />
-    </svg>
-  );
-}
-
-function FileIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-    </svg>
-  );
-}
-
-function FolderIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-    </svg>
-  );
-}
-
-function MoveHorizontalIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="18 8 22 12 18 16" />
-      <polyline points="6 8 2 12 6 16" />
-      <line x1="2" x2="22" y1="12" y2="12" />
-    </svg>
-  );
-}
-
-function BackIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12" />
-      <polyline points="12 19 5 12 12 5" />
-    </svg>
   );
 }
