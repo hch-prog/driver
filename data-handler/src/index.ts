@@ -1,12 +1,14 @@
 
 import { getUserFiles, createUser, findUser, getFile, getUserFolders } from "./handlers/fileHandler";
-import { fileUpload, folderUpload, getUserData } from "./handlers/filesHandler";
-
+import { fetchFolderFiles, fileUpload, folderFileUpload, folderUpload, getUserData } from "./handlers/filesHandler";
 
 export default {
   async fetch(request: Request, env: any) {
     const url = new URL(request.url);
     let response: Response = new Response('Not found', { status: 404 });
+
+    const allowedOrigins = ['http://localhost:3000', 'https://driver-chi.vercel.app'];
+    const origin = request.headers.get('Origin');
 
     const pathname = url.pathname;
     try {
@@ -45,6 +47,12 @@ export default {
           case '/file-upload':
             response = await fileUpload(request, env);
             break;
+          case '/fetchFolderFiles':
+            response= await fetchFolderFiles(request,env);
+            break;
+          case '/folderFileUpload':
+            response= await folderFileUpload(request,env);
+            break
           
           default:
             response = new Response('Not found', { status: 404 });
@@ -52,14 +60,20 @@ export default {
         }
       }
 
+      // Create a new Headers object for your custom headers
+      const headers = new Headers(response.headers);
+
+      // Set CORS headers dynamically
+      headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      headers.set('Access-Control-Allow-Headers', 'Content-Type');
+
+      if (origin && allowedOrigins.includes(origin)) {
+        headers.set('Access-Control-Allow-Origin', origin);
+      }
+
       response = new Response(response.body, {
         ...response,
-        headers: {
-          ...response.headers,
-          'Access-Control-Allow-Origin': 'http://localhost:3000',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
+        headers, // Pass the updated headers object
       });
 
       return response;
@@ -69,3 +83,5 @@ export default {
     }
   }
 };
+
+
