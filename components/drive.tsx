@@ -7,9 +7,10 @@ import { Card, CardContent, CardFooter } from '@/ui/card';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
-import { Upload } from './Upload';
+
 import { Folder } from './Folder';
-import { UploadIcon, FolderIcon, MoveHorizontalIcon, FileIcon, BackIcon } from 'lucide-react';
+import { UploadIcon, FolderIcon, MoveHorizontalIcon, FileIcon, HardDriveDownloadIcon, ArrowLeft } from 'lucide-react';
+import { Upload } from './upload';
 
 
 
@@ -258,7 +259,7 @@ export function Drive() {
                   </Button>
                 ) : (
                   <Button className="justify-start gap-2 px-2" onClick={() => setPage(false)}>
-                    <BackIcon className="h-5 w-5" />
+                    <ArrowLeft className="h-5 w-5" />
                     Back
                   </Button>
                 )}
